@@ -8,8 +8,10 @@ from django.db import transaction
 from django.conf import settings
 from .bills import generate_pdf_bill
 from .mail import send_order_mail
+from .payment import create_payment,verify_payment
 import threading
 import os
+
 class CategoryApiView(APIView):
     permission_classes=[AllowAny]
     def get(self,request):
@@ -131,10 +133,13 @@ class OrderItemApiView(APIView):
         try:
             shipping_address_id=request.data.get("shipping_address_id")
             order_list=request.data.get("order_list")
+            payment_mode=request.data.get("payment_mode")
             if not order_list:
                 return Response({"detail":"Order list is required"},status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             if not shipping_address_id:
                 return Response({"detail":"Please select shipping address"},status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            if payment_mode not in ["COD","Online Payment"]:
+                return Response({"detail":"Please select a valid payment mode"},status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             user_shipping_address=ShippingAddress.objects.filter(user=request.user).values_list('id',flat=True)
             if shipping_address_id not in user_shipping_address:
                 return Response({"detail":"Invalid shipping address"},status=status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -160,11 +165,12 @@ class OrderItemApiView(APIView):
                     folder_path = os.path.join(settings.MEDIA_ROOT, f'bills/{request.user.email_id}/')
                     os.makedirs(folder_path, exist_ok=True)
 
-                    # Define PDF file path
-                    
-                    
+                    if payment_mode!="COD":
+                        payment_order_id=create_payment(total_price)
+                        order.payment_order_id=payment_order_id
                     order.total_price=total_price
                     order.no_of_product=no_of_product
+                    order.payment_method=payment_mode
                     order.bill=f'bills/{request.user.email_id}/{order.order_id}.pdf'
                     order.save()
                     bill_path = os.path.join(folder_path, f'{order.order_id}.pdf')
@@ -199,3 +205,27 @@ class OrderItemApiView(APIView):
             print(e)
             return Response({ 'detail':'Something went wrong please try again'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+
+
+class VerifyPaymentApiView(APIView):
+    def post(self,request):
+        try:
+            razorpay_order_id= request.data["razorpay_order_id"] 
+            razorpay_payment_id =request.data['razorpay_payment_id']
+            razorpay_signature= request.data["razorpay_signature"]
+            payment_status=verify_payment(razorpay_order_id,razorpay_payment_id,razorpay_signature)
+            order=Order.objects.get(payment_order_id=razorpay_order_id)
+            if payment_status:
+                
+                order.is_paid=True
+                order.payment_id=razorpay_payment_id
+                order.payment_signature=razorpay_signature
+                order.save()
+                return Response({"message":"Payment success"},status=status.HTTP_200_OK)
+            order.status='Payment Failed'
+            order.save()
+            return Response({"detail":"Payment Failed"},status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response({ 'detail':'Something went wrong please try again'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+       

@@ -164,7 +164,7 @@ USE_TZ = False
 
 STATIC_URL = 'static/'
 
-# STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles')
+STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles')
 # STATICFILES_DIR=[
 #     os.path.join(BASE_DIR,'static')
 # ]
@@ -177,6 +177,10 @@ CLIENT_URL=os.environ.get('CLIENT_URL')
 
 EMAIL_ID=os.environ.get('EMAIL_ID')
 EMAIL_PASSWORD=os.environ.get('EMAIL_PASSWORD')
+
+PAYMENT_KEY=os.environ.get('PAYMENT_KEY')
+PAYMENT_SECRET=os.environ.get('PAYMENT_SECRET')
+
 
 PAGINATION_SIZE=12
 

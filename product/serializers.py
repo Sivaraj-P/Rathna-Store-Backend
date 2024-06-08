@@ -45,3 +45,4 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model=OrderItem 
         fields='__all__'       
+

@@ -29,13 +29,13 @@ ORDER_STATUS=(
     ('Shipped','Shipped'),
     ('Delivered','Delivered'),
     ('Cancelled','Cancelled'),
-    ('On Hold','On Hold')
+    ('Payment Failed','Payment Failed')
 )
 
 
 PAYMENT_METHODS=(
 ('COD','COD'),
-('UPI','UPI')
+('Online Payment','Online Payment')
 )
 
 class Category(models.Model):
@@ -92,7 +92,7 @@ class Order(models.Model):
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     order_id=models.CharField(max_length=18,default=generate_order_id)
     no_of_product=models.IntegerField(null=True,blank=True)
-    payment_method = models.CharField(max_length=200,choices=PAYMENT_METHODS,default='COD')
+    payment_method = models.CharField(max_length=200,choices=PAYMENT_METHODS)
     tax_price = models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True)
     shipping_price = models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True)
     total_price = models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True)
@@ -103,6 +103,10 @@ class Order(models.Model):
     shipping_address=models.ForeignKey(ShippingAddress,on_delete=models.SET_NULL,null=True)
     status=models.CharField(max_length=20,choices=ORDER_STATUS,default='Confirmed')
     bill=models.FileField(null=True,blank=True)
+    payment_order_id=models.CharField(max_length=200,null=True,blank=True)
+    payment_id=models.CharField(max_length=200,null=True,blank=True)
+    payment_signature=models.CharField(max_length=200,null=True,blank=True)
+
 
 
     def __str__(self):

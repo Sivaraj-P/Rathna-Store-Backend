@@ -1,5 +1,5 @@
 from django.urls import path,re_path
-from .views import CategoryApiView,ProductApiView,ShippingAddressApiView,OrderApiView,OrderItemApiView
+from .views import CategoryApiView,ProductApiView,ShippingAddressApiView,OrderApiView,OrderItemApiView,VerifyPaymentApiView
 from .media import serve_media
 
 urlpatterns=[
@@ -11,9 +11,8 @@ urlpatterns=[
     path('orders',OrderApiView.as_view(),name='order'),
     path('order-items',OrderItemApiView.as_view(),name='order_item'),
     path('order-items/<int:id>',OrderItemApiView.as_view(),name='order_item_id'),
-
+    path('verify-payment',VerifyPaymentApiView.as_view(),name='verify_payment')
 ]
 urlpatterns += [
      re_path(r"^media/(?P<path>.*)", serve_media, name="serve_media"),
-
 ]
