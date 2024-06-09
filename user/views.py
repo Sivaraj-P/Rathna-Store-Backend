@@ -133,11 +133,13 @@ class RegenerateActivationTokenApiView(APIView):
 
             user_activation_instance.regenerate_token()
             user_activation_instance.save()
-            
+            send_mail=threading.Thread(target=send_user_activation_mail,args=(user.email_id,f"{user.first_name} {user.last_name}",user_activation_instance.token))
+            send_mail.start()
             return Response({'message':'Activation link sent to registered email'}, status=status.HTTP_200_OK)
 
             
-        except:
+        except Exception as e:
+            print(e)
             return Response({ 'detail':'Something went wrong please try again'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
